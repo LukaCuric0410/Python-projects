@@ -55,5 +55,5 @@ Sub ExportSheetsToCSV()
         Close FileNum
     Next ws
     
-    MsgBox "Tabovi su uspješno podijeljeni u zasebne CSV fajlove u UTF-8 formatu!", vbInformation
+    MsgBox "I dalje ti Luka sve omogucuje!", vbInformation
 End Sub
