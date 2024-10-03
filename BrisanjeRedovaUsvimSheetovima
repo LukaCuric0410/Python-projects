@@ -1,0 +1,48 @@
+Sub FindAndDeleteAllSheets()
+    Dim searchValue As String
+    Dim foundCell As Range
+    Dim ws As Worksheet
+    Dim rowToKeep As Long
+    Dim lastRow As Long
+    Dim colToDelete As Long
+    Dim i As Long
+
+    ' Zatraži od korisnika da unese sadržaj koji se traži
+    searchValue = InputBox("Unesite sadržaj koji želite pronaći:")
+
+    ' Provjeri je li korisnik unio neki sadržaj
+    If searchValue = "" Then
+        MsgBox "Unos nije važeći. Pokušajte ponovno."
+        Exit Sub
+    End If
+    
+    ' Prolazi kroz svaki radni list u radnoj knjizi
+    For Each ws In ThisWorkbook.Sheets
+        ' Pronađi ćeliju s traženim sadržajem na trenutnom radnom listu
+        Set foundCell = ws.Cells.Find(What:=searchValue, LookIn:=xlValues, LookAt:=xlPart, MatchCase:=False)
+        
+        ' Ako je sadržaj pronađen na ovom radnom listu
+        If Not foundCell Is Nothing Then
+            ' Spremi redak pronađene ćelije
+            rowToKeep = foundCell.Row
+            colToDelete = foundCell.Column
+
+            ' Zadrži samo taj redak - izbriši sve ostale redove osim prvog
+            lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+            
+            For i = lastRow To 2 Step -1 ' Počinjemo od 2 da ne bi brisali prvi red
+                If i <> rowToKeep Then
+                    ws.Rows(i).Delete
+                End If
+            Next i
+            
+            ' Briši sve ćelije lijevo od pronađene ćelije u tom retku
+            If colToDelete > 1 Then
+                ws.Range(ws.Cells(rowToKeep, 1), ws.Cells(rowToKeep, colToDelete - 1)).Clear
+            End If
+        End If
+    Next ws
+    
+    ' Obavijesti korisnika da je operacija završena
+    MsgBox "Operacija završena na svim radnim listovima!"
+End Sub
