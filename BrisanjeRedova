@@ -8,11 +8,11 @@ Sub FindAndDelete()
     Dim colToDelete As Long
     Dim i As Long
 
-    ' Postavi radni list na aktivni radni list
+    
     Set ws = ActiveSheet
     
-    ' Zatraži od korisnika da unese sadržaj koji se traži
-    searchValue = InputBox("Unesite sadržaj koji želite pronaći:")
+    ' ovaj dio koda trazi korisnika da upise sadrzaj 
+    searchValue = InputBox("Upisi locale kod:")
 
     ' Pronađi ćeliju s traženim sadržajem
     Set foundCell = ws.Cells.Find(What:=searchValue, LookIn:=xlValues, LookAt:=xlPart, MatchCase:=False)
