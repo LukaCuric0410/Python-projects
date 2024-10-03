@@ -1,4 +1,4 @@
-Sub FindAndDeleteAllSheets()
+   Sub FindAndDeleteAllSheets()
     Dim searchValue As String
     Dim foundCell As Range
     Dim ws As Worksheet
@@ -8,7 +8,7 @@ Sub FindAndDeleteAllSheets()
     Dim i As Long
 
     ' Zatraži od korisnika da unese sadržaj koji se traži
-    searchValue = InputBox("Unesite sadržaj koji želite pronaći:")
+    searchValue = InputBox("Unesi locale kod:")
 
     ' Provjeri je li korisnik unio neki sadržaj
     If searchValue = "" Then
@@ -44,5 +44,5 @@ Sub FindAndDeleteAllSheets()
     Next ws
     
     ' Obavijesti korisnika da je operacija završena
-    MsgBox "Operacija završena na svim radnim listovima!"
+    MsgBox "Zapamti , sve ti je ovo omogućio Luka!"
 End Sub
