@@ -1,40 +1,29 @@
-Sub SplitWorksheetsIntoFiles()
+Sub ExportSheetsToCSV()
     Dim ws As Worksheet
-    Dim NewWb As Workbook
     Dim FilePath As String
     Dim FileName As String
     Dim ValidFileName As String
+    Dim FileNum As Integer
+    Dim RowNum As Long
+    Dim ColNum As Long
+    Dim Line As String
     
-    ' Ovdje se postavlja putanja di se trebaju spremiti file-ovi(PROMIJENI ZA SEBE)
-    FilePath = "/FolderPath/"
+    ' Postavite putanju gdje će se spremiti CSV datoteke
+    FilePath = "/Users/CuricL/Desktop/AnamariaTest/"
     
-    ' Na ovome jos radim
+    ' Provjera i dodavanje završnog backslasha ako nedostaje
     If Right(FilePath, 1) <> "/" Then
         FilePath = FilePath & "/"
     End If
 
-    ' provjera putanje jeli postojana 
+    ' Provjerite postoji li putanja
     If Dir(FilePath, vbDirectory) = "" Then
         MsgBox "Putanja ne postoji! Molimo unesite ispravnu putanju.", vbExclamation
         Exit Sub
     End If
 
-    ' Excel ima naviku otvarati nove stvorene workbook-ove pa ih ovo zatvara
-    Application.ScreenUpdating = False
-
-    ' Petlja koja prolazi kroz svaki worksheet u workbook-u
+    ' Petlja kroz svaki tab (worksheet) u aktivnoj radnoj knjizi
     For Each ws In ThisWorkbook.Worksheets
-        ' Kreiranje novih Workbook-ova od svakog worksheet-a
-        Set NewWb = Workbooks.Add(xlWBATWorksheet)
-        
-        ' Kopiraj trenutni worksheet u novi workbook
-        ws.Copy Before:=NewWb.Sheets(1)
-        
-        ' Izbriši prazni sheet koji se automatski generira
-        Application.DisplayAlerts = False
-        NewWb.Sheets(2).Delete
-        Application.DisplayAlerts = True
-        
         ' Osiguraj ispravno ime fajla (bez neispravnih znakova za naziv fajla)
         ValidFileName = Replace(ws.Name, "/", "_")
         ValidFileName = Replace(ValidFileName, "\", "_")
@@ -44,18 +33,27 @@ Sub SplitWorksheetsIntoFiles()
         ValidFileName = Replace(ValidFileName, "[", "_")
         ValidFileName = Replace(ValidFileName, "]", "_")
         
-        ' Spremi workbook pod imenom taba
+        ' Kreiraj puni naziv datoteke
         FileName = FilePath & ValidFileName & ".csv"
         
-        ' Spremi novi workbook bez otvaranja
-        NewWb.SaveAs FileName:=FileName, FileFormat:=xlCSVUTF8
+        ' Otvori tekstualni fajl za pisanje
+        FileNum = FreeFile
+        Open FileName For Output As FileNum
         
-        ' Zatvori workbook bez prikazivanja
-        NewWb.Close False
+        ' Petlja kroz svaki redak i stupac kako bi zapisao podatke u CSV
+        For RowNum = 1 To ws.UsedRange.Rows.Count
+            Line = ""
+            For ColNum = 1 To ws.UsedRange.Columns.Count
+                ' Dodaj podatke iz svake ćelije
+                Line = Line & IIf(ColNum > 1, ",", "") & ws.Cells(RowNum, ColNum).Text
+            Next ColNum
+            ' Zapiši redak u CSV fajl
+            Print #FileNum, Line
+        Next RowNum
+        
+        ' Zatvori fajl
+        Close FileNum
     Next ws
     
-    ' Ponovno uključi prikaz ekrana
-    Application.ScreenUpdating = True
-
-    MsgBox "Zapamti da ti je Luka sve omogucio !", vbInformation
+    MsgBox "Tabovi su uspješno podijeljeni u zasebne CSV fajlove u UTF-8 formatu!", vbInformation
 End Sub
