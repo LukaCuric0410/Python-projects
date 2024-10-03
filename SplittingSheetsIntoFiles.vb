@@ -45,10 +45,10 @@ Sub SplitWorksheetsIntoFiles()
         ValidFileName = Replace(ValidFileName, "]", "_")
         
         ' Spremi workbook pod imenom taba
-        FileName = FilePath & ValidFileName & ".xlsx"
+        FileName = FilePath & ValidFileName & ".csv"
         
         ' Spremi novi workbook bez otvaranja
-        NewWb.SaveAs FileName:=FileName, FileFormat:=xlOpenXMLWorkbook
+        NewWb.SaveAs FileName:=FileName, FileFormat:=xlCSVUTF8
         
         ' Zatvori workbook bez prikazivanja
         NewWb.Close False
