@@ -9,11 +9,10 @@ Sub ExportSheetsToCSVIfSpecificTextFound()
     Dim Line As String
     Dim CheckCellContent As String
     Dim SpecificText As String
-    Dim LastRow As Long
     Dim TextFound As Boolean
     
     ' Prikazuje InputBox za unos specifi?nog teksta
-    SpecificText = InputBox("Unesite tekst koji zelite traziti u stupcu A:", "Unos trazenog teksta")
+    SpecificText = InputBox("Unesite tekst koji zelite traziti u cijelom radnom listu:", "Unos tra?enog teksta")
     
     ' Ako korisnik ne unese ni?ta, iza?i iz procedure
     If SpecificText = "" Then
@@ -41,21 +40,23 @@ Sub ExportSheetsToCSVIfSpecificTextFound()
     For Each ws In ThisWorkbook.Worksheets
         TextFound = False ' Resetiraj oznaku za svaki radni list
         
-        ' Odredi posljednji kori?teni redak u stupcu A
-        LastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
-        
-        ' Petlja kroz sve ?elije u stupcu A (od reda 1 do LastRow)
-        For RowNum = 1 To LastRow
-            CheckCellContent = ws.Cells(RowNum, 1).Value ' ?itanje vrijednosti iz stupca A
+        ' Petlja kroz sve ?elije na radnom listu
+        For RowNum = 1 To ws.UsedRange.Rows.Count
+            For ColNum = 1 To ws.UsedRange.Columns.Count
+                CheckCellContent = ws.Cells(RowNum, ColNum).Value ' ?itanje vrijednosti iz svake ?elije
+                
+                ' Provjera ima li ?elija specifi?an tekst
+                If CheckCellContent = SpecificText Then
+                    TextFound = True ' Prona?en specifi?an tekst
+                    Exit For ' Iza?i iz petlje za stupce
+                End If
+            Next ColNum
             
-            ' Provjera ima li ?elija specifi?an tekst
-            If CheckCellContent = SpecificText Then
-                TextFound = True ' Prona?en specifi?an tekst
-                Exit For ' Nema potrebe za daljnjom provjerom, mo?emo iza?i iz petlje
-            End If
+            ' Ako je tekst prona?en, iza?i i iz petlje za redove
+            If TextFound Then Exit For
         Next RowNum
         
-        ' Ako je prona?en specifi?an tekst u stupcu A, kreiraj CSV datoteku
+        ' Ako je prona?en specifi?an tekst na radnom listu, kreiraj CSV datoteku
         If TextFound Then
             ' Osiguraj ispravno ime fajla (bez neispravnih znakova za naziv fajla)
             ValidFileName = Replace(ws.Name, "/", "_")
@@ -91,3 +92,4 @@ Sub ExportSheetsToCSVIfSpecificTextFound()
     
     MsgBox "I dalje ti Luka sve omogucuje!", vbInformation
 End Sub
+
