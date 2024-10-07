@@ -1,4 +1,4 @@
-Sub ExportSheetsToCSVIfSpecificTextFound()
+Sub ExportSheetsToCSVIfMultipleTextsFound()
     Dim ws As Worksheet
     Dim FilePath As String
     Dim FileName As String
@@ -8,17 +8,22 @@ Sub ExportSheetsToCSVIfSpecificTextFound()
     Dim ColNum As Long
     Dim Line As String
     Dim CheckCellContent As String
-    Dim SpecificText As String
+    Dim SpecificTexts As String
+    Dim TextArray() As String
     Dim TextFound As Boolean
+    Dim i As Long
     
-    ' Prikazuje InputBox za unos specifi?nog teksta
-    SpecificText = InputBox("Unesite tekst koji zelite traziti u cijelom radnom listu:", "Unos tra?enog teksta")
+    ' Prikazuje InputBox za unos vi?e tekstova, odvojenih zarezima
+    SpecificTexts = InputBox("Unesite tekstove koje zelite traziti u cijelom radnom listu, odvojene zarezima:", "Unos trazenih tekstova")
     
     ' Ako korisnik ne unese ni?ta, iza?i iz procedure
-    If SpecificText = "" Then
-        MsgBox "Niste unijeli tekst.", vbExclamation
+    If SpecificTexts = "" Then
+        MsgBox "Niste unijeli nijedan tekst.", vbExclamation
         Exit Sub
     End If
+    
+    ' Razdvajanje unesenih tekstova na temelju zareza
+    TextArray = Split(SpecificTexts, ",")
     
     ' Postavite putanju gdje ?e se spremiti CSV datoteke
     FilePath = "/Users/CuricL/Desktop"
@@ -45,18 +50,24 @@ Sub ExportSheetsToCSVIfSpecificTextFound()
             For ColNum = 1 To ws.UsedRange.Columns.Count
                 CheckCellContent = ws.Cells(RowNum, ColNum).Value ' ?itanje vrijednosti iz svake ?elije
                 
-                ' Provjera ima li ?elija specifi?an tekst
-                If CheckCellContent = SpecificText Then
-                    TextFound = True ' Prona?en specifi?an tekst
-                    Exit For ' Iza?i iz petlje za stupce
-                End If
+                ' Provjera ima li ?elija bilo koji od unesenih tekstova
+                For i = LBound(TextArray) To UBound(TextArray)
+                    ' Uklanja nepotrebne razmake s po?etka i kraja teksta
+                    If Trim(CheckCellContent) = Trim(TextArray(i)) Then
+                        TextFound = True ' Prona?en jedan od tra?enih tekstova
+                        Exit For ' Iza?i iz petlje za pretragu teksta
+                    End If
+                Next i
+                
+                ' Ako je tekst prona?en, iza?i iz petlje za stupce
+                If TextFound Then Exit For
             Next ColNum
             
-            ' Ako je tekst prona?en, iza?i i iz petlje za redove
+            ' Ako je tekst prona?en, iza?i iz petlje za redove
             If TextFound Then Exit For
         Next RowNum
         
-        ' Ako je prona?en specifi?an tekst na radnom listu, kreiraj CSV datoteku
+        ' Ako je prona?en bilo koji tra?eni tekst na radnom listu, kreiraj CSV datoteku
         If TextFound Then
             ' Osiguraj ispravno ime fajla (bez neispravnih znakova za naziv fajla)
             ValidFileName = Replace(ws.Name, "/", "_")
@@ -90,6 +101,6 @@ Sub ExportSheetsToCSVIfSpecificTextFound()
         End If
     Next ws
     
-    MsgBox "I dalje ti Luka sve omogucuje!", vbInformation
+    MsgBox "Zapamti,Luka ti je sve omogucio!", vbInformation
 End Sub
 
