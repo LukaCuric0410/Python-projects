@@ -1,4 +1,4 @@
-Sub FindAndDeleteAllSheetsMultipleSearchValues()
+Sub FindAndDeleteSheetsAndRowsMultipleSearchValues()
     Dim searchValues As String
     Dim foundCell As Range
     Dim ws As Worksheet
@@ -8,56 +8,83 @@ Sub FindAndDeleteAllSheetsMultipleSearchValues()
     Dim searchValue As String
     Dim rowToKeep As Collection
     Dim j As Long
+    Dim sheetToDelete As Boolean
 
-    ' Zatra?i od korisnika da unese sadr?aj koji se tra?i (odvojeno zarezima)
-    searchValues = InputBox("Unesi vrijednosti koje zeli? traziti (odvoji zarezima):")
+    ' Zatraži od korisnika da unese sadržaj koji se traži (odvojeno zarezima)
+    searchValues = InputBox("Unesi vrijednosti koje želiš tražiti (odvoji zarezima):")
 
-    ' Provjeri je li korisnik unio neki sadr?aj
+    ' Provjeri je li korisnik unio neki sadržaj
     If searchValues = "" Then
-        MsgBox "Unos nije vazeci. Poku?ajte ponovno."
+        MsgBox "Unos nije važeći. Pokušajte ponovno."
         Exit Sub
     End If
 
     ' Razdvoji unesene vrijednosti na polje
     searchArray = Split(searchValues, ",")
 
-    ' Prolazi kroz svaki radni list u radnoj knjizi
+    ' Prvo, obriši radne listove koji ne sadrže nijedan od unesenih pojmova
+    For Each ws In ThisWorkbook.Sheets
+        sheetToDelete = True ' Pretpostavljamo da ćemo obrisati sheet
+
+        ' Provjeri sve unose
+        For j = LBound(searchArray) To UBound(searchArray)
+            searchValue = Trim(searchArray(j)) ' Uklanja nepotrebne razmake
+
+            ' Pronađi ćeliju s traženim sadržajem na trenutnom radnom listu
+            Set foundCell = ws.Cells.Find(What:=searchValue, LookIn:=xlValues, LookAt:=xlPart, MatchCase:=False)
+
+            ' Ako je sadržaj pronađen na ovom radnom listu
+            If Not foundCell Is Nothing Then
+                sheetToDelete = False ' Ne brišemo sheet
+                Exit For ' Nema potrebe da nastavljamo s pretragom
+            End If
+        Next j
+
+        ' Ako nismo pronašli nijedan od unesenih pojmova, brišemo sheet
+        If sheetToDelete Then
+            Application.DisplayAlerts = False
+            ws.Delete
+            Application.DisplayAlerts = True
+        End If
+    Next ws
+
+    ' Sada, obriši redove koji ne sadrže unesene pojmove na preostalim radnim listovima
     For Each ws In ThisWorkbook.Sheets
         lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
-        Set rowToKeep = New Collection ' Kreiraj novu kolekciju za redke koje ?emo zadr?ati
-        
+        Set rowToKeep = New Collection ' Kreiraj novu kolekciju za redke koje ćemo zadržati
+
         ' Petlja kroz svaku vrijednost iz polja
         For j = LBound(searchArray) To UBound(searchArray)
             searchValue = Trim(searchArray(j)) ' Uklanja nepotrebne razmake
 
-            ' Prona?i ?eliju s tra?enim sadr?ajem na trenutnom radnom listu
+            ' Pronađi ćeliju s traženim sadržajem na trenutnom radnom listu
             Set foundCell = ws.Cells.Find(What:=searchValue, LookIn:=xlValues, LookAt:=xlPart, MatchCase:=False)
-            
-            ' Ako je sadr?aj prona?en na ovom radnom listu
+
+            ' Ako je sadržaj pronađen na ovom radnom listu
             If Not foundCell Is Nothing Then
-                ' Dodaj sve redke koji sadr?e prona?eni tekst u kolekciju
-                For i = 2 To lastRow ' Po?injemo od 2 da izbjegnemo prvi red
+                ' Dodaj sve redke koji sadrže pronađeni tekst u kolekciju
+                For i = 2 To lastRow ' Počinjemo od 2 da izbjegnemo prvi red
                     If InStr(1, ws.Cells(i, foundCell.Column).Value, searchValue, vbTextCompare) > 0 Then
-                        On Error Resume Next ' Izbjegavanje gre?ke ako je redak ve? u kolekciji
-                        rowToKeep.Add i, CStr(i) ' Dodaj redak u kolekciju koriste?i redni broj kao klju?
-                        On Error GoTo 0 ' Vra?a standardno pona?anje gre?aka
+                        On Error Resume Next ' Izbjegavanje greške ako je redak već u kolekciji
+                        rowToKeep.Add i, CStr(i) ' Dodaj redak u kolekciju koristeći redni broj kao ključ
+                        On Error GoTo 0 ' Vraća standardno ponašanje grešaka
                     End If
                 Next i
             End If
         Next j
 
-        ' Bri?i sve redove osim onih koje smo zadr?ali, ali zadr?i prvi red
-        For i = lastRow To 2 Step -1 ' Po?injemo od kraja prema po?etku, izbjegavaju?i prvi red
-            On Error Resume Next ' Izbjegavanje gre?ke ako redak nije u kolekciji
+        ' Briši sve redove osim onih koje smo zadržali, ali zadrži prvi red
+        For i = lastRow To 2 Step -1 ' Počinjemo od kraja prema početku, izbjegavajući prvi red
+            On Error Resume Next ' Izbjegavanje greške ako redak nije u kolekciji
             rowToKeep.Item CStr(i) ' Provjerava da li redak postoji u kolekciji
             If Err.Number <> 0 Then
-                ws.Rows(i).Delete ' Ako nije, brisi redak
-                Err.Clear ' Resetuj gresku
+                ws.Rows(i).Delete ' Ako nije, briši redak
+                Err.Clear ' Resetuj grešku
             End If
-            On Error GoTo 0 ' Vra?a standardno pona?anje gre?aka
+            On Error GoTo 0 ' Vraća standardno ponašanje grešaka
         Next i
     Next ws
     
-    ' Obavijesti korisnika da je operacija zavr?ena
-    MsgBox "Zapamti, sve ti je ovo omogucio Luka!"
+    ' Obavijesti korisnika da je operacija završena
+    MsgBox "Zapamti, sve ti je ovo omogućio Luka!"
 End Sub
