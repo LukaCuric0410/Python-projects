@@ -10,7 +10,7 @@ Sub FindAndDeleteSheetsAndRowsMultipleSearchValues()
     Dim j As Long
     Dim sheetToDelete As Boolean
 
-    ' Zatraži od korisnika da unese sadržaj koji se traži (odvojeno zarezima)
+    ' Ovaj dio koda trazi od korisnik da unese vrijednosti tj. locale code odvojen zarezom
     searchValues = InputBox("Unesi vrijednosti koje želiš tražiti (odvoji zarezima):")
 
     ' Provjeri je li korisnik unio neki sadržaj
