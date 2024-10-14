@@ -1,66 +1,67 @@
-Sub PremjestiSheetovePremaUnosuIRucnomFilePathu()
-    Dim wb As Workbook
-    Dim noviWb As Workbook
+Sub FiltrirajRedoveIBrisiPrazneSheetoveCijeliWorkbook()
+    Dim lastRow As Long
+    Dim i As Long
+    Dim trazenaVrijednostC As String
+    Dim trazenaVrijednostD As String
     Dim ws As Worksheet
-    Dim sheetCount As Integer
-    Dim trazenaVrijednost As String
-    Dim i As Integer
-    Dim filePath As String
-    Dim b1Value As String
+    Dim wb As Workbook
+    Dim wsToDelete As Collection
+    Dim deleteSheet As Boolean
     
-    ' Korisnik unosi tra?enu vrijednost putem InputBox-a
-    trazenaVrijednost = InputBox("Unesite sadr?aj koji ?elite pretra?iti u ?eliji B1:", "Pretraga B1")
+    ' Radimo sa svim sheetovima u trenutnom workbooku
+    Set wb = ThisWorkbook
+    Set wsToDelete = New Collection ' Lista za sheetove koje treba obrisati
+
+    ' Uklanjanje svih filtera u svim sheetovima
+    For Each ws In wb.Sheets
+        If ws.AutoFilterMode Then
+            ws.AutoFilterMode = False
+        End If
+    Next ws
+
+    ' Korisnik unosi vrijednost koja se tra?i u kolumni C
+    trazenaVrijednostC = InputBox("Unesite sadr?aj koji ?elite pretra?iti u kolumni C:", "Pretraga C kolumne")
+    
+    ' Korisnik unosi vrijednost koja mora biti u istoj row-u u kolumni D
+    trazenaVrijednostD = InputBox("Unesite sadr?aj koji mora biti u istoj kolumni D:", "Pretraga D kolumne")
     
     ' Provjera je li unesena vrijednost prazna
-    If Len(Trim(trazenaVrijednost)) = 0 Then
-        MsgBox "Morate unijeti vrijednost za pretragu!", vbExclamation
+    If Len(Trim(trazenaVrijednostC)) = 0 Or Len(Trim(trazenaVrijednostD)) = 0 Then
+        MsgBox "Morate unijeti obje vrijednosti za pretragu!", vbExclamation
         Exit Sub
     End If
     
-    ' Ru?no definiramo putanju gdje ?e se spremiti novi workbook
-    ' OVDJE UNOSI? PUTANJU ZA SPREMANJE WORKBOOK-A:
-    filePath = "/Users/CuricL/Desktop/Posusje.xlsx"  ' Promijeni ovu putanju prema svojim potrebama
-    
-    ' Kreiramo novi workbook u koji ?emo premjestiti odgovaraju?e sheetove
-    Set noviWb = Workbooks.Add
-    
-    ' Zapo?injemo s brojanjem sheetova koji odgovaraju
-    sheetCount = 0
-    
-    ' Prolazimo kroz sve sheetove u trenutnom workbooku
-    For i = ThisWorkbook.Sheets.Count To 1 Step -1
-        Set ws = ThisWorkbook.Sheets(i)
+    ' Druga petlja kroz sve worksheet-ove u workbooku za filtriranje
+    For Each ws In wb.Sheets
+        deleteSheet = True ' Pretpostavljamo da ?e se sheet obrisati osim ako se ne prona?e odgovaraju?i redak
         
-        ' Preuzimamo i trimamo vrijednost iz B1 ?elije
-        b1Value = Trim(ws.Range("B1").Value)
+        ' Prona?i zadnji redak s podacima u kolumni C za trenutni sheet
+        lastRow = ws.Cells(ws.Rows.Count, "C").End(xlUp).Row
         
-        ' Provjeravamo ako je vrijednost u B1 jednaka tra?enoj vrijednosti (tako?er Trim za uklanjanje vi?ka praznih znakova)
-        If b1Value = Trim(trazenaVrijednost) Then
-            ' Kopiramo sheet u novi workbook
-            ws.Copy After:=noviWb.Sheets(noviWb.Sheets.Count)
-            ' Pove?avamo broj sheetova koji su premje?teni
-            sheetCount = sheetCount + 1
-            
-            ' Provjera da li sheet stvarno ?elimo obrisati
-            If MsgBox("?elite li izbrisati sheet '" & ws.Name & "' nakon premje?tanja?", vbYesNo + vbQuestion) = vbYes Then
-                ' Bri?emo sheet iz trenutnog workbooka
-                Application.DisplayAlerts = False
-                ws.Delete
-                Application.DisplayAlerts = True
+        ' Petlja ide od zadnjeg do drugog retka za filtriranje
+        For i = lastRow To 2 Step -1
+            ' Provjeravamo odgovara li vrijednost u C i D tra?enim vrijednostima
+            If Trim(ws.Cells(i, 3).Value) = Trim(trazenaVrijednostC) And Trim(ws.Cells(i, 4).Value) = Trim(trazenaVrijednostD) Then
+                deleteSheet = False ' Ako prona?emo odgovaraju?i redak, sheet se ne bri?e
+            Else
+                ' Ako ne odgovara, bri?emo cijeli redak
+                ws.Rows(i).Delete
             End If
+        Next i
+        
+        ' Ako nema odgovaraju?ih redova, dodajemo sheet na listu za brisanje
+        If deleteSheet Then
+            wsToDelete.Add ws.Name
         End If
-    Next i
+    Next ws
     
-    ' Ako su sheetovi uspje?no premje?teni
-    If sheetCount > 0 Then
-        ' Spremamo workbook na definiranu putanju
-        noviWb.SaveAs filePath
-        MsgBox "Svi odgovaraju?i sheetovi su premje?teni u novi workbook i spremljeni pod nazivom: " & filePath
-    Else
-        MsgBox "Nema sheetova sa sadr?ajem u ?eliji B1 koji odgovara unesenoj vrijednosti."
-        ' Ako nema premje?tenih sheetova, zatvaramo prazan workbook bez spremanja
-        noviWb.Close SaveChanges:=False
-    End If
+    ' Brisanje sheetova koji nemaju odgovaraju?e podatke
+    Application.DisplayAlerts = False ' Isklju?ujemo upozorenje za brisanje sheetova
+    For i = 1 To wsToDelete.Count
+        wb.Sheets(wsToDelete(i)).Delete
+    Next i
+    Application.DisplayAlerts = True ' Ponovno uklju?ujemo upozorenja
+    
+    MsgBox "Pretraga zavr?ena. Odgovaraju?i redovi su filtrirani, a sheetovi bez rezultata su obrisani."
 End Sub
-
 
