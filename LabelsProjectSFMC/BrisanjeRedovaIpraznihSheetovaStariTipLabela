@@ -1,0 +1,59 @@
+Sub FiltrirajRedoveIBrisiPrazneSheetove()
+    Dim lastRow As Long
+    Dim i As Long
+    Dim trazenaVrijednostC As String
+    Dim trazenaVrijednostD As String
+    Dim ws As Worksheet
+    Dim wb As Workbook
+    Dim wsToDelete As Collection
+    Dim deleteSheet As Boolean
+    
+    ' Korisnik unosi vrijednost koja se traži u kolumni C
+    trazenaVrijednostC = InputBox("Unesite sadržaj koji želite pretražiti u kolumni C:", "Pretraga C kolumne")
+    
+    ' Korisnik unosi vrijednost koja mora biti u istoj row-u u kolumni D
+    trazenaVrijednostD = InputBox("Unesite sadržaj koji mora biti u istoj kolumni D:", "Pretraga D kolumne")
+    
+    ' Provjera je li unesena vrijednost prazna
+    If Len(Trim(trazenaVrijednostC)) = 0 Or Len(Trim(trazenaVrijednostD)) = 0 Then
+        MsgBox "Morate unijeti obje vrijednosti za pretragu!", vbExclamation
+        Exit Sub
+    End If
+    
+    ' Radimo sa svim sheetovima u trenutnom workbooku
+    Set wb = ThisWorkbook
+    Set wsToDelete = New Collection ' Lista za sheetove koje treba obrisati
+    
+    ' Petlja kroz sve worksheet-ove u workbooku
+    For Each ws In wb.Sheets
+        deleteSheet = True ' Pretpostavljamo da će se sheet obrisati osim ako se ne pronađe odgovarajući redak
+        
+        ' Pronađi zadnji redak s podacima u kolumni C za trenutni sheet
+        lastRow = ws.Cells(ws.Rows.Count, "C").End(xlUp).Row
+        
+        ' Petlja ide od zadnjeg do drugog retka (jer prvi red ostaje netaknut)
+        For i = lastRow To 2 Step -1
+            ' Provjeravamo odgovara li vrijednost u C i D traženim vrijednostima
+            If Trim(ws.Cells(i, 3).Value) = Trim(trazenaVrijednostC) And Trim(ws.Cells(i, 4).Value) = Trim(trazenaVrijednostD) Then
+                deleteSheet = False ' Ako pronađemo odgovarajući redak, sheet se ne briše
+            Else
+                ' Ako ne odgovara, brišemo cijeli redak
+                ws.Rows(i).Delete
+            End If
+        Next i
+        
+        ' Ako nema odgovarajućih redova, dodajemo sheet na listu za brisanje
+        If deleteSheet Then
+            wsToDelete.Add ws.Name
+        End If
+    Next ws
+    
+    ' Brisanje sheetova koji nemaju odgovarajuće podatke
+    Application.DisplayAlerts = False ' Isključujemo upozorenje za brisanje sheetova
+    For i = 1 To wsToDelete.Count
+        wb.Sheets(wsToDelete(i)).Delete
+    Next i
+    Application.DisplayAlerts = True ' Ponovno uključujemo upozorenja
+    
+    MsgBox "Pretraga završena. Odgovarajući redovi su filtrirani, a sheetovi bez rezultata su obrisani."
+End Sub
