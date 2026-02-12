@@ -1,0 +1,80 @@
+Sub CombineCSV_UTF8_Safe()
+    Dim file As String
+    Dim folderPath As String
+    Dim mainWB As Workbook
+    Dim tempWB As Workbook
+    Dim qt As QueryTable
+    Dim sheetName As String
+    Dim i As Long
+    
+    folderPath = "C:\path\to\your\folder\"   ' MUST end with backslash
+    Set mainWB = ThisWorkbook
+    
+    file = Dir(folderPath & "*.csv")
+    
+    Do While file <> ""
+        
+        ' Create a temporary workbook with 1 sheet
+        Set tempWB = Workbooks.Add(xlWBATWorksheet)
+        
+        ' Import CSV as UTF-8 using QueryTable
+        Set qt = tempWB.Sheets(1).QueryTables.Add( _
+            Connection:="TEXT;" & folderPath & file, _
+            Destination:=tempWB.Sheets(1).Range("A1"))
+        
+        With qt
+            .TextFileParseType = xlDelimited
+            .TextFileCommaDelimiter = True
+            .TextFilePlatform = 65001      ' UTF-8
+            .Refresh BackgroundQuery:=False
+        End With
+        
+        ' Build sheet name
+        sheetName = Replace(file, ".csv", "")
+        
+        ' Remove prefix "2-2-2026-AE_Transactional_"
+        If InStr(sheetName, "Transactional_") > 0 Then
+            sheetName = Mid(sheetName, InStr(sheetName, "Transactional_") + Len("Transactional_"))
+        End If
+        
+        ' Remove suffix "_Labels"
+        If Right(sheetName, 7) = "_Labels" Then
+            sheetName = Left(sheetName, Len(sheetName) - 7)
+        End If
+        
+        sheetName = CleanSheetName(sheetName)
+        
+        ' Avoid duplicates
+        i = 1
+        Do While SheetExists(sheetName, mainWB)
+            sheetName = Left(sheetName, 28) & "_" & i
+            i = i + 1
+        Loop
+        
+        ' Copy into main workbook
+        tempWB.Sheets(1).Copy After:=mainWB.Sheets(mainWB.Sheets.Count)
+        mainWB.Sheets(mainWB.Sheets.Count).Name = sheetName
+        
+        tempWB.Close False
+        file = Dir
+    Loop
+End Sub
+
+Function CleanSheetName(name As String) As String
+    Dim badChars As Variant
+    Dim c As Variant
+    
+    badChars = Array(":", "\", "/", "?", "*", "[", "]")
+    
+    For Each c In badChars
+        name = Replace(name, c, "")
+    Next c
+    
+    CleanSheetName = Left(name, 31)
+End Function
+
+Function SheetExists(name As String, wb As Workbook) As Boolean
+    On Error Resume Next
+    SheetExists = Not wb.Sheets(name) Is Nothing
+    On Error GoTo 0
+End Function
